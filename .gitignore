@@ -36,6 +36,8 @@ bower_components
 build/Release
 
 # Dependency directories
+traffic/
+Traffic_Excel/
 node_modules/
 jspm_packages/
 ReportDaily/
