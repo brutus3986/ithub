@@ -48,7 +48,7 @@ export default {
         return{
             curPage   : 1,
             totalPage : 0,
-            perPage   : 20,
+            perPage   : 200,
             userModal : false,
             pwdModal  : false,
             modalgubun: 0,

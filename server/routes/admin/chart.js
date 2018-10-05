@@ -250,7 +250,7 @@ var getUserChartListMonth = function(req, res) {
 
                 fileList.forEach(function(el1, idx1, arr1) {
                     var clist = { 'fullsrc': "", 'fname': "" };
-                    clist.fullsrc = "/public/ReportDaily/" + curDate + "/" + el1;
+                    clist.fullsrc = "/public/ReportMonthly/" + curDate + "/" + el1;
                     clist.fname = el1;
                     dataList.push(clist);
                 });
