@@ -92,7 +92,7 @@ import LoginNoticeModal from './LoginNoticeModal.vue';
 export default {
     data() {
         return {
-            showModal : false,
+            showModal : true,
         };
     },
     components: {

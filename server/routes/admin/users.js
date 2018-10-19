@@ -33,21 +33,29 @@ var userList = function(req, res) {
             }
         }
 
-        database.UserModel.findAll(options, function(err, results) {
-            if(results.length == 0) {
-                res.json({ success: false, message: "No Data" });
-                res.end();
+        database.UserModel.countAllUser(function(err, userCnt) {
+            // console.log("userCnt : " + userCnt);
+            if(userCnt > 0) {
+                database.UserModel.findByOptions(options, function(err, results) {
+                    if(results.length == 0) {
+                        res.json({ success: false, message: "No Data" });
+                        res.end();
+                    }else {
+                        var totalPage = Math.ceil(userCnt / req.query.perPage);
+                        console.log(" totalPage : " + totalPage) ;
+                        var pageInfo = {
+                            "totalPage": totalPage,
+                            "perPage": req.query.perPage,
+                            "curPage": req.query.curPage
+                        };
+                        var resBody = { "pageInfo": pageInfo, "userslist": results };
+    
+                        res.json(resBody);
+                        res.end();
+                    }
+                });
             }else {
-                var totalPage = Math.ceil(results.length / req.query.perPage);
-                // console.log("count : " + count + " totalPage : " + totalPage) ;
-                var pageInfo = {
-                    "totalPage": totalPage,
-                    "perPage": req.query.perPage,
-                    "curPage": req.query.curPage
-                };
-                var resBody = { "pageInfo": pageInfo, "userslist": results };
-
-                res.json(resBody);
+                res.json({ success: false, message: "No Data" });
                 res.end();
             }
         });

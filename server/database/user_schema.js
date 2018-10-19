@@ -73,16 +73,16 @@ Schema.createSchema = function(mongoose) {
             console.log(options.criteria);
             return this.find(options.criteria).exec(callback);
         },
-        //게시판구분(bbsid)으로 조회
-        countByBbsId: function(options, callback) {
-            return this.find(options.criteria).count().exec(callback);
+        //전체 사용자수 조회
+        countAllUser: function(callback) {
+            return this.find().count().exec(callback);
         },
         //userid로 조회 (사용사 설정 수정/삭제 시 비밀번호 확인)  
         findByUserId: function(userid, callback) {
             return this.find({ userid }).exec(callback);
         },
-        //전체 사용자 가져오기
-        findAll: function(options, callback) {
+        //사용자 가져오기
+        findByOptions: function(options, callback) {
             return this.find(options.criteria)
                 // .sort({'userid': -1})
                 .sort({ 'updated_at': -1 })
