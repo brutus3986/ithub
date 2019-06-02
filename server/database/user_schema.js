@@ -73,7 +73,12 @@ Schema.createSchema = function(mongoose) {
             console.log(options.criteria);
             return this.find(options.criteria).exec(callback);
         },
-        //전체 사용자수 조회
+        //로그인 (ID체크) login.js에서 사용 (비상처리)
+        loginByUserExit: function(options, callback) {
+          console.log(options.criteria);
+          return this.find(options.criteria).exec(callback);
+      },
+      //전체 사용자수 조회
         countAllUser: function(callback) {
             return this.find().count().exec(callback);
         },

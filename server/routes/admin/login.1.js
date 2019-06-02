@@ -29,14 +29,15 @@ var checkLogin = function(req, res) {
     console.log('client IP***********--> ' + ip);
 
     options.criteria.userid = userid;
+    options.criteria.hashed_password = crypto.createHash('sha256', config.pwd_salt).update(password).digest('base64');;
 
     console.log("userid : [" + userid + "]");
     // console.log("hashed_password : [" + options.criteria.hashed_password + "]");
 
-    if (userid.length > 0) {
+    if (userid.length > 0 && password.length > 0) {
         var UM = req.app.get('database').UserModel;
 
-        UM.loginByUserExit(options, function(err, user) {
+        UM.loginByUser(options, function(err, user) {
             if (err) {
                 console.log("Error.......: " + err);
                 res.json({ success: false, message: err });
