@@ -11,10 +11,10 @@ var getUserSpecInfo = function(req, res) {
     console.log('/user/getUserSpecInfo 패스 요청됨.');
     console.log(req.body);
     
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var options = {
             "criteria": { "bbs_id": req.query.bbs_id, 
@@ -22,7 +22,7 @@ var getUserSpecInfo = function(req, res) {
                 "notice": req.query.notice},
         }
         
-        database.BoardModel.getUserSpecInfo(options, function(err, results) {
+        mydb.BoardModel.getUserSpecInfo(options, function(err, results) {
             console.log(results);
             if(results.length == 0) {
                 res.json({ success: false, message: "No Data" });

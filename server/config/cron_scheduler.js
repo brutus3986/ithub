@@ -26,10 +26,10 @@ function cronRegister(app) {
 }
 
 function dailyCronJob(app) {
-    var database = app.get('database');
+    var mydb = app.get('database');
 
-    if (database.db) {
-        database.UserModel.initTodayVisit(function(err, result) {
+    if (mydb.db) {
+				mydb.UserModel.initTodayVisit(function(err, result) {
             if (err) {
                 console.log("initTodayVisit.... ERROR " + err);
             } else {

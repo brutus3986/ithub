@@ -9,14 +9,14 @@
 var listStory = function(req, res) {
     console.log('/board/liststory 패스 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     if(req.query.bbs_id == undefined) {
         console.log("F5 TEST..........................");
     }
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var options = {
             "criteria": { "bbs_id": req.query.bbs_id },
@@ -35,7 +35,7 @@ var listStory = function(req, res) {
             }
         }
 
-        database.BoardModel.findByBbsId(options, function(err, results) {
+        mydb.BoardModel.findByBbsId(options, function(err, results) {
             // console.log(results);
             if(results.length == 0) {
                 res.json({ success: false, message: "No Data" });
@@ -64,15 +64,15 @@ var listStory = function(req, res) {
 var insertStory = function(req, res) {
     console.log('/board/insertstory 패스 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id }, "storyinfo": storyInfo };
-        database.BoardModel.getMaxStoryId(options, function(err, result) {
+        mydb.BoardModel.getMaxStoryId(options, function(err, result) {
             if (err) {
                 res.json({ success: false, message: err });
                 res.end();
@@ -83,7 +83,7 @@ var insertStory = function(req, res) {
                     var maxStoryId = result.story_id + 1;
                 }
                 options.storyinfo.story_id = maxStoryId;
-                var tModel = new database.BoardModel(options.storyinfo);
+                var tModel = new mydb.BoardModel(options.storyinfo);
 
                 tModel.insertStory(function(err, result) {
                     if (err) {
@@ -112,15 +112,15 @@ var insertStory = function(req, res) {
 var updateStory = function(req, res) {
     console.log('/board/updatestory 패스 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
 
-        database.BoardModel.updateStory(options, function(err) {
+        mydb.BoardModel.updateStory(options, function(err) {
             if (err) {
                 console.log("Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
@@ -142,16 +142,16 @@ var updateStory = function(req, res) {
 var updateViewCount = function(req, res) {
     console.log('updateViewCount 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var bbs_id = req.body.bbs_id;
         var story_id = req.body.story_id;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": story_id }};
 
-        database.BoardModel.updateViewCount(options, function(err) {
+        mydb.BoardModel.updateViewCount(options, function(err) {
             if (err) {
                 console.log("updateViewCount Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
@@ -173,15 +173,15 @@ var updateViewCount = function(req, res) {
 var deleteStory = function(req, res) {
     console.log('/board/deletestory 패스 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
-    if (database.db) {
+    if (mydb.db) {
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
 
-        database.BoardModel.deleteStory(options, function(err) {
+        mydb.BoardModel.deleteStory(options, function(err) {
             if (err) {
                 console.log("Delete.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });

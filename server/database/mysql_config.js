@@ -12,9 +12,9 @@ module.exports = {
     password: "kc_ithub",
     database: "kc_ithub",
     db_model: [
+        { file: './mysql/admin/member_model', modelName: 'AdminUserMember' },
+        { file: './mysql/user/board_model', modelName: 'Board' },
+        { file: './mysql/user/compinfo_model', modelName: 'CompInfo' },
         { file: './mysql/user/member_model', modelName: 'UserMember' },
-        // { file: './mysql/user/etpregister_model', modelName: 'EtpRegister' },
-        // { file: './mysql/user/indexmanage_model', modelName: 'IndexManage' },
-        // { file: './mysql/user/etpinfo_model', modelName: 'EtpInfo' },
     ],
 }

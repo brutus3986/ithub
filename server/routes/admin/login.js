@@ -17,7 +17,7 @@ var checkLogin = function(req, res) {
     var password = req.body.password;
     // 운영으로 갈때 주석풀기
     if(config.runenv == "dev") {
-        var ip = "211.255.203.42";
+        var ip = "211.255.203.41";
     }else {
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
     }
@@ -34,9 +34,11 @@ var checkLogin = function(req, res) {
     // console.log("hashed_password : [" + options.criteria.hashed_password + "]");
 
     if (userid.length > 0) {
-        var UM = req.app.get('database').UserModel;
-
-        UM.loginByUserExit(options, function(err, user) {
+        var mydb = req.app.get('mydb');
+        var options = {id:userid};
+        var stmt = mydb.AdminUserMember.loginByUser(options);
+        console.log(stmt);
+        mydb.db.query(stmt, function(err, user) {
             if (err) {
                 console.log("Error.......: " + err);
                 res.json({ success: false, message: err });
@@ -66,12 +68,13 @@ var checkLogin = function(req, res) {
                         makeSessionKey(req, user[0]);
                         res.end();
 
-                        var visit_day = new Date();
+                        //var visit_day = new Date();
                         // 당일 / 누적 카운팅, 당일 초기화는 cron
-                        options = { "criteria": {"userid": userid}, 
-                            "userinfo": {$inc: { total_visit: 1, today_visit : 1}, $set:{ last_visitday: visit_day}}};
-
-                        UM.updateInfo(options, function(err) {
+                        // options = { "criteria": {"userid": userid}, 
+                        //     "userinfo": {$inc: { total_visit: 1, today_visit : 1}, $set:{ last_visitday: visit_day}}};
+                        var stmt = mydb.AdminUserMember.updateInfo(options);
+                        console.log(stmt); 
+                        mydb.db.query(stmt, function(err) {   
                             if (err) {
                                 console.log("Visit Update.... FAIL " + err);
                             } else {
@@ -116,13 +119,13 @@ var makeSessionKey = function(req, user) {
 var countInfo = function(req, res) {
     console.log('login 모듈 안에 있는 countInfo 호출됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         //카운트 조회
-        database.CountModel.getVisitCount(function(err, count) {
+        mydb.CountModel.getVisitCount(function(err, count) {
             if (err) {
                 console.dir(err);
                 res.json({ success: false, message: err });
@@ -161,7 +164,7 @@ var countInfo = function(req, res) {
                     var options = { "today_count": today_count, "total_count": total_count, "updated_at": uDate }
 
                     //방문자수 업데이트 
-                    database.CountModel.updateCountInfo(options, function(err) {
+                    mydb.CountModel.updateCountInfo(options, function(err) {
                         if (err) {
                             console.log("UpdateCountInfo.... FAIL " + err);
                             res.json({ success: false, message: "FAIL" });
@@ -189,7 +192,7 @@ var countInfo = function(req, res) {
             };
         }); //getVisitCount 끝
 
-        //database.db 데이터베이스 connection ERROR
+        //mydb.db 데이터베이스 connection ERROR
     } else {
         res.json({ success: false, message: "DB connection Error" });
         res.end();

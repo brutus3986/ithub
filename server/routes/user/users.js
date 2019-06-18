@@ -12,16 +12,16 @@ var getUserInfo = function(req, res) {
     console.log('/users/getUserInfo 패스 요청됨.');
     console.log(req.body);
     
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var userid = req.body.userid || req.query.userid;
         console.log("getUserInfo : " + req.body.userid);
         console.log("getUserInfo : " + req.query.userid);
         
-        database.UserModel.findByUserId(userid, function(err, user) {
+        mydb.UserModel.findByUserId(userid, function(err, user) {
             console.log("getUserInfo : " + user);
             if (err) {
                 console.dir(err);
@@ -45,14 +45,14 @@ var getUserInfo = function(req, res) {
 var updateUserInfo = function(req, res) {
     console.log('/users/updateUserInfo 패스 요청됨');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
         var userinfo = req.body.userinfo;
         var options = { "criteria": {"userid": userinfo.userid}, "userinfo": userinfo };
 
-        database.UserModel.updateInfo(options, function(err) {
+        mydb.UserModel.updateInfo(options, function(err) {
             if (err) {
                 console.log("Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });

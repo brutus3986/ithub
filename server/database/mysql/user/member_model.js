@@ -7,13 +7,24 @@
  */
 var model = {};
 
-model.selectUserList = function(options) {
-	console.log('selectUserList');
+model.getUserInfo = function(options) {
+	console.log('getUserInfo');
 
-    var stmt = 'SELECT * from etp_test WHERE 1=1';
+    var stmt = 'SELECT * from users WHERE 1=1';
     
     if(options.id != null) {
-        stmt += ` AND ID = \'${options.id}\'`;
+        stmt += ` AND userid = \'${options.id}\'`;
+    }
+    return stmt;
+}
+
+model.updateUserInfo = function(options) {
+	console.log('getUserInfo');
+
+    var stmt = 'SELECT * from users WHERE 1=1';
+    
+    if(options.id != null) {
+        stmt += ` AND userid = \'${options.id}\'`;
     }
     return stmt;
 }

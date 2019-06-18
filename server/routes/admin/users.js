@@ -11,10 +11,10 @@ var config = require('../../config/config');
 var userList = function(req, res) {
     console.log('/admin/userList 패스 요청됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var options = {
             "criteria": {},
@@ -33,10 +33,10 @@ var userList = function(req, res) {
             }
         }
 
-        database.UserModel.countAllUser(function(err, userCnt) {
+        mydb.UserModel.countAllUser(function(err, userCnt) {
             // console.log("userCnt : " + userCnt);
             if(userCnt > 0) {
-                database.UserModel.findByOptions(options, function(err, results) {
+                mydb.UserModel.findByOptions(options, function(err, results) {
                     if(results.length == 0) {
                         res.json({ success: false, message: "No Data" });
                         res.end();
@@ -70,12 +70,12 @@ var userList = function(req, res) {
 //신규사용자 중복확인
 var useridCheck = function(req, res) {
     console.log('/admin/useridCheck 패스 요청됨 ');
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
         var userid = req.body.userid;
-        database.UserModel.findByUserId(userid, function(err, user) {
+        mydb.UserModel.findByUserId(userid, function(err, user) {
             if (err) {
                 console.dir(err);
                 res.json({ success: false, message: err });
@@ -107,9 +107,9 @@ var useridCheck = function(req, res) {
 //비밀번호 초기화
 var pwdInit = function(req, res) {
     console.log('/admin/pwdInit 패스 요청됨');
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
-    if (database.db) {
+    if (mydb.db) {
         var userid = req.body.userid;
         console.log("salt : " + config.pwd_salt);
         var hashed_password = crypto.createHash('sha256', config.pwd_salt).update(config.pwd_default).digest('base64');
@@ -117,7 +117,7 @@ var pwdInit = function(req, res) {
         console.log("hash : " + hashed_password);
         var options = { "criteria": { "userid": userid }, "pwdInfo": {"hashed_password": hashed_password} };
 
-        database.UserModel.pwdChange(options, function(err, result) {
+        mydb.UserModel.pwdChange(options, function(err, result) {
             if (err) {
                 console.log("pwdInit.... Initialize ERROR " + err);
                 res.json({ success: false, message: "Initialize ERROR !!" });
@@ -137,9 +137,9 @@ var pwdInit = function(req, res) {
 //비밀번호 수정
 var pwdChange = function(req, res) {
     console.log('/admin/pwdChange 패스 요청됨');
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
-    if (database.db) {
+    if (mydb.db) {
         var userid = req.body.userid;
         var oldPwd = req.body.oldPwd;
         var newPwd = req.body.newPwd;
@@ -149,7 +149,7 @@ var pwdChange = function(req, res) {
         options.criteria.userid = userid;
         options.criteria.hashed_password = old_hashed_password;
     
-        database.UserModel.loginByUser(options, function(err, user) {
+        mydb.UserModel.loginByUser(options, function(err, user) {
             if (err) {
                 console.log(" pwdChange DB Error.......: " + err);
                 res.json({ success: false, message: err });
@@ -160,7 +160,7 @@ var pwdChange = function(req, res) {
                 console.log("hash : " + new_hashed_password);
                 var options1 = { "criteria": { "userid": userid }, "pwdInfo": {"hashed_password": new_hashed_password} };
     
-                database.UserModel.pwdChange(options1, function(err, result) {
+                mydb.UserModel.pwdChange(options1, function(err, result) {
                     if (err) {
                         console.log("pwdChange.... Initialize ERROR " + err);
                         res.json({ success: false, message: "Initialize ERROR !!" });
@@ -187,18 +187,18 @@ var pwdChange = function(req, res) {
 var insertInfo = function(req, res) {
     console.log('/users/insertinfo 패스 요청됨 ');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
     var hashed_password = crypto.createHash('sha256', config.pwd_salt).update(config.pwd_default).digest('base64');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         var userinfo = req.body.userinfo;
         userinfo.hashed_password = hashed_password;
 
         var options = { "criteria": {}, "userinfo": userinfo };
 
-        var UM = new database.UserModel(options.userinfo);
+        var UM = new mydb.UserModel(options.userinfo);
         UM.insertInfo(function(err, result) {
             if (err) {
                 console.log("Insert.... FAIL");
@@ -223,14 +223,14 @@ var insertInfo = function(req, res) {
 var updateInfo = function(req, res) {
     console.log('/users/updateinfo 패스 요청됨');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
         var userinfo = req.body.userinfo;
         var options = { "criteria": {"userid": userinfo.userid}, "userinfo": userinfo };
 
-        database.UserModel.updateInfo(options, function(err) {
+        mydb.UserModel.updateInfo(options, function(err) {
             if (err) {
                 console.log("Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
@@ -252,13 +252,13 @@ var updateInfo = function(req, res) {
 var deleteInfo = function(req, res) {
     console.log('/users/deleteinfo 패스 요청됨.');
 
-    var database = req.app.get('database');
-    if (database.db) {
+    var mydb = req.app.get('mydb');
+    if (mydb.db) {
         var bbs_id = req.body.bbs_id;
         var userinfo = req.body.userinfo;
         var options = { "criteria": {"userid": userinfo.userid }, "userinfo": userinfo };
 
-        database.UserModel.deleteInfo(options, function(err) {
+        mydb.UserModel.deleteInfo(options, function(err) {
             if (err) {
                 console.log("Delete.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });

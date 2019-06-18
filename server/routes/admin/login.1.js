@@ -9,7 +9,7 @@ var config = require('../../config/config');
 
 //로그인
 var checkLogin = function(req, res) {
-    console.log('users 모듈 안에 있는 checkLogin 호출됨.');
+    console.log('users 모듈 안에 있는 checkLogin 1 호출됨.');
 
     // console.dir(req);
     var options = { criteria: {} };
@@ -35,9 +35,12 @@ var checkLogin = function(req, res) {
     // console.log("hashed_password : [" + options.criteria.hashed_password + "]");
 
     if (userid.length > 0 && password.length > 0) {
-        var UM = req.app.get('database').UserModel;
+        var mydb = req.app.get('mydb');
+        var options = {id:userid};
+        var stmt = mydb.UserMember.selectUserList(options);
+        console.log(stmt);
 
-        UM.loginByUser(options, function(err, user) {
+         mydb.db.query(stmt, function(err, user, fields) {
             if (err) {
                 console.log("Error.......: " + err);
                 res.json({ success: false, message: err });
@@ -117,13 +120,13 @@ var makeSessionKey = function(req, user) {
 var countInfo = function(req, res) {
     console.log('login 모듈 안에 있는 countInfo 호출됨.');
 
-    var database = req.app.get('database');
+    var mydb = req.app.get('mydb');
 
     // 데이터베이스 객체가 초기화된 경우
-    if (database.db) {
+    if (mydb.db) {
 
         //카운트 조회
-        database.CountModel.getVisitCount(function(err, count) {
+        mydb.CountModel.getVisitCount(function(err, count) {
             if (err) {
                 console.dir(err);
                 res.json({ success: false, message: err });
@@ -162,7 +165,7 @@ var countInfo = function(req, res) {
                     var options = { "today_count": today_count, "total_count": total_count, "updated_at": uDate }
 
                     //방문자수 업데이트 
-                    database.CountModel.updateCountInfo(options, function(err) {
+                    mydb.CountModel.updateCountInfo(options, function(err) {
                         if (err) {
                             console.log("UpdateCountInfo.... FAIL " + err);
                             res.json({ success: false, message: "FAIL" });
@@ -190,7 +193,7 @@ var countInfo = function(req, res) {
             };
         }); //getVisitCount 끝
 
-        //database.db 데이터베이스 connection ERROR
+        //mydb.db 데이터베이스 connection ERROR
     } else {
         res.json({ success: false, message: "DB connection Error" });
         res.end();
