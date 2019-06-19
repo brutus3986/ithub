@@ -22,7 +22,7 @@ var getUserSpecInfo = function(req, res) {
                 "notice": req.query.notice},
         }
         
-        mydb.BoardModel.getUserSpecInfo(options, function(err, results) {
+        mydb.Board.getUserSpecInfo(options, function(err, results) {
             console.log(results);
             if(results.length == 0) {
                 res.json({ success: false, message: "No Data" });

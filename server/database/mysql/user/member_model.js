@@ -16,10 +16,10 @@ model.getUserInfo = function(options) {
         stmt += ` AND userid = \'${options.id}\'`;
     }
     return stmt;
-}
+},
 
 model.updateUserInfo = function(options) {
-	console.log('getUserInfo');
+	console.log('updateUserInfo');
 
     var stmt = 'SELECT * from users WHERE 1=1';
     

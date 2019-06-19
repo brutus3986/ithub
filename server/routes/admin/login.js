@@ -6,13 +6,15 @@
  */
 var crypto = require('crypto');
 var config = require('../../config/config');
+var Promise = require("bluebird");
+var async = require('async');
 
 //로그인
 var checkLogin = function(req, res) {
     console.log('users 모듈 안에 있는 checkLogin 호출됨.');
 
     // console.dir(req);
-    var options = { criteria: {} };
+    //var options = { criteria: {} };
     var userid = req.body.userid;
     var password = req.body.password;
     // 운영으로 갈때 주석풀기
@@ -27,77 +29,81 @@ var checkLogin = function(req, res) {
     var dt = new Date();
     var dt_time = dt.getHours();
     console.log('client IP***********--> ' + ip);
-
-    options.criteria.userid = userid;
-
     console.log("userid : [" + userid + "]");
     // console.log("hashed_password : [" + options.criteria.hashed_password + "]");
 
     if (userid.length > 0) {
-        var mydb = req.app.get('mydb');
-        var options = {id:userid};
-        var stmt = mydb.AdminUserMember.loginByUser(options);
-        console.log(stmt);
-        mydb.db.query(stmt, function(err, user) {
-            if (err) {
-                console.log("Error.......: " + err);
-                res.json({ success: false, message: err });
-                res.end();
-            }
-            // 등록된 사용자가 없는 경우
-            if (user.length > 0) {
-                console.log('계정 일치.');
-                console.log(' 이름 : ' + user[0].name);
-                console.log(' IP주소 : ' + user[0].ipaddr);
-                console.log(' 접속시간 TO : ' + user[0].starttime);
-                console.log(' 접속시간 FROM : ' + user[0].endtime);
-                console.log(' 현재 시간대 :' + dt_time);
-                var dbIpaddr = user[0].ipaddr.split(',');
-                if (dbIpaddr.indexOf(ip) !== -1) { //계정일치, 접속 허용IP 일치
-                    if (user[0].starttime <= dt_time && dt_time <= user[0].endtime) {
-                        res.json({
-                            success: true,
-                            message: "OK",
-                            userid: userid,
-                            username: user[0].name,
-                            user_level: user[0].user_level,
-                            comp_no: user[0].comp_no,
-                            comp_name: user[0].comp_name,
-                        });
+        try{
+            var pool = req.app.get("pool");
+            var mapper = req.app.get("mapper");
+            var options = { userid : userid };
+            var stmt = mapper.getStatement('userInfo', 'getUser', options, {language:'sql', indent: '  '});
+            console.log(stmt);
+            Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(user => {
+                if (user.length > 0) {
+                    console.log('계정 일치.');
+                    console.log(' 이름 : ' + user[0][0].name);
+                    console.log(' IP주소 : ' + user[0][0].ipaddr);
+                    console.log(' 접속시간 TO : ' + user[0][0].starttime);
+                    console.log(' 접속시간 FROM : ' + user[0][0].endtime);
+                    console.log(' 현재 시간대 :' + dt_time);
+                    var dbIpaddr = user[0][0].ipaddr.split(',');
+                        if (dbIpaddr.indexOf(ip) !== -1) { //계정일치, 접속 허용IP 일치
+                            if (user[0][0].starttime <= dt_time && dt_time <= user[0][0].endtime) {
+                                 res.json({
+                                    success: true,
+                                    message: "OK",
+                                    userid: userid,
+                                    username: user[0][0].name,
+                                    user_level: user[0][0].user_level,
+                                    comp_no: user[0][0].comp_no,
+                                    comp_name: user[0][0].comp_name,
+                                });
+                                makeSessionKey(req, user[0][0]);
+                                res.end();
 
-                        makeSessionKey(req, user[0]);
-                        res.end();
-
-                        //var visit_day = new Date();
-                        // 당일 / 누적 카운팅, 당일 초기화는 cron
-                        // options = { "criteria": {"userid": userid}, 
-                        //     "userinfo": {$inc: { total_visit: 1, today_visit : 1}, $set:{ last_visitday: visit_day}}};
-                        var stmt = mydb.AdminUserMember.updateInfo(options);
-                        console.log(stmt); 
-                        mydb.db.query(stmt, function(err) {   
-                            if (err) {
-                                console.log("Visit Update.... FAIL " + err);
-                            } else {
-                                console.log("Visit Update.... SUCCESS ");
-                            }
-                        });
+                                //var visit_day = new Date();
+                                // 당일 / 누적 카운팅, 당일 초기화는 cron
+                                // options = { "criteria": {"userid": userid}, 
+                                //     "userinfo": {$inc: { total_visit: 1, today_visit : 1}, $set:{ last_visitday: visit_day}}};
+                                // var stmt = mydb.AdminUserMember.updateInfo(options);
+                                // mydb.db.query(stmt, function(err) {   
+                                //     if (err) {
+                                //         console.log("Visit Update.... FAIL " + err);
+                                //     } else {
+                                //         console.log("Visit Update.... SUCCESS ");
+                                //     }
+                                // });
                 
-                    } else {
-                        console.log('계정은 일치, IP정보 일치, 접속시간 불일치');
-                        res.json({ success: false, message: "No Auth TIME" });
-                        res.end();
-                    }
+                            } else {
+                                console.log('계정은 일치, IP정보 일치, 접속시간 불일치');
+                                res.json({ success: false, message: "No Auth TIME" });
+                                res.end();
+                            }
+                        } else {
+                            console.log('계정은 일치하지만, IP정보가 다름!!');
+                            res.json({ success: false, message: "No Auth IP" });
+                            res.end();
+                        }
                 } else {
-                    console.log('계정은 일치하지만, IP정보가 다름!!');
-                    res.json({ success: false, message: "No Auth IP" });
+                    console.log('계정 일치하지 않음.');
+                    res.json({ success: false, message: "ERROR LOGIN" });
                     res.end();
                 }
-            } else {
-                console.log('계정 일치하지 않음.');
-                res.json({ success: false, message: "ERROR LOGIN" });
+            }).catch(err => {
+                console.log("Error while performing Query.");
+                res.json({
+                    success: false,
+                    message: err
+                });
                 res.end();
-            }
+            });
         });
+        } catch(exception) {
+            console.log("err=>");
+        }      
+    
     } else {
         res.json({ success: false, message: "ERROR LOGIN" });
         res.end();

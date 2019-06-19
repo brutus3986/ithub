@@ -10,20 +10,18 @@ var listStory = function(req, res) {
     console.log('/board/liststory 패스 요청됨.');
 
     var mydb = req.app.get('mydb');
-
+ 
     if(req.query.bbs_id == undefined) {
         console.log("F5 TEST..........................");
     }
 
     // 데이터베이스 객체가 초기화된 경우
     if (mydb.db) {
-
-        var options = {
+         var options = {
             "criteria": { "bbs_id": req.query.bbs_id },
             "perPage": req.query.perPage,
             "curPage": req.query.curPage
         };
-
         if(req.query.searchinfo != '') {
             var sinfo = '.*' + req.query.searchinfo + '*.';
             if(req.query.seloption == 'title') {
@@ -34,15 +32,19 @@ var listStory = function(req, res) {
                 options.criteria = { $and: [ { contents : {$regex : sinfo, $options:"i" }}, ] };
             }
         }
-
-        mydb.BoardModel.findByBbsId(options, function(err, results) {
-            // console.log(results);
+        console.log("option : " + JSON.stringify(options)); 
+        var stmt = mydb.Board.getBbsInfo(options);
+        mydb.db.query(stmt, function(err, results) {
+             if (err) {
+                console.log("findByBbsId " + err);
+            } else {
+                console.log("findByBbsId.... SUCCESS ");
+            }
             if(results.length == 0) {
                 res.json({ success: false, message: "No Data" });
                 res.end();
             }else {
                 var totalPage = Math.ceil(results.length / req.query.perPage);
-                // console.log("count : " + count + " totalPage : " + totalPage);
                 var pageInfo = {
                     "totalPage": totalPage,
                     "perPage": req.query.perPage,
@@ -72,21 +74,25 @@ var insertStory = function(req, res) {
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id }, "storyinfo": storyInfo };
-        mydb.BoardModel.getMaxStoryId(options, function(err, result) {
-            if (err) {
+        var stmt = mydb.Board.getMaxStoryId(options);
+        mydb.db.query(stmt, function(err, result) {
+             if (err) {
                 res.json({ success: false, message: err });
                 res.end();
-            }else if(result === null || result){
+            }else if(result === null || result ){
                 if(result === null){
                     var maxStoryId = 1;
                 }else{
                     var maxStoryId = result.story_id + 1;
                 }
                 options.storyinfo.story_id = maxStoryId;
-                var tModel = new mydb.BoardModel(options.storyinfo);
-
-                tModel.insertStory(function(err, result) {
-                    if (err) {
+                storyInfo.story_id = maxStoryId;
+                //var tModel = new mydb.Board(options.storyinfo);
+                var stmt = mydb.Board.insertStory(options);
+                console.log("storyInfo" + JSON.stringify(storyInfo));
+                console.log(stmt);
+                mydb.db.query(stmt,[storyInfo.bbs_id,storyInfo.contents,storyInfo.display,storyInfo.notice,storyInfo.story_id ,storyInfo.title,storyInfo.view,storyInfo.writer], function(err, results) {
+                     if (err) {
                         console.log("Insert.... FAIL");
                         res.json({ success: false, message: "FAIL" });
                         res.end();
@@ -120,7 +126,7 @@ var updateStory = function(req, res) {
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
 
-        mydb.BoardModel.updateStory(options, function(err) {
+        mydb.Board.updateStory(options, function(err) {
             if (err) {
                 console.log("Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
@@ -151,7 +157,7 @@ var updateViewCount = function(req, res) {
         var story_id = req.body.story_id;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": story_id }};
 
-        mydb.BoardModel.updateViewCount(options, function(err) {
+        mydb.Board.updateViewCount(options, function(err) {
             if (err) {
                 console.log("updateViewCount Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
@@ -181,7 +187,7 @@ var deleteStory = function(req, res) {
         var storyInfo = req.body.storyinfo;
         var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
 
-        mydb.BoardModel.deleteStory(options, function(err) {
+        mydb.Board.deleteStory(options, function(err) {
             if (err) {
                 console.log("Delete.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
