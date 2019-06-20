@@ -4,21 +4,23 @@
  * @date 2018-04-05
  * @author shjinji
  */
+var Promise = require("bluebird");
+var async = require('async');
+
 
 //공지사항 리스트 
 var listStory = function(req, res) {
     console.log('/board/liststory 패스 요청됨.');
-
-    var mydb = req.app.get('mydb');
  
     if(req.query.bbs_id == undefined) {
         console.log("F5 TEST..........................");
     }
-
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
-         var options = {
-            "criteria": { "bbs_id": req.query.bbs_id },
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
+    
+        var options = {
+            "bbs_id": req.query.bbs_id ,
             "perPage": req.query.perPage,
             "curPage": req.query.curPage
         };
@@ -32,34 +34,34 @@ var listStory = function(req, res) {
                 options.criteria = { $and: [ { contents : {$regex : sinfo, $options:"i" }}, ] };
             }
         }
-        console.log("option : " + JSON.stringify(options)); 
-        var stmt = mydb.Board.getBbsInfo(options);
-        mydb.db.query(stmt, function(err, results) {
-             if (err) {
+        console.log("options", JSON.stringify(options));
+        var stmt = mapper.getStatement('board', 'getBbsInfo', options, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(results => {
+                    var totalPage = Math.ceil(results.length / req.query.perPage);
+                    var pageInfo = {
+                        "totalPage": totalPage,
+                        "perPage": req.query.perPage,
+                        "curPage": req.query.curPage
+                    };
+                    var resBody = { "pageInfo": pageInfo, "stories": results[0], "count": results[0].length,  success: true};
+                    res.json(resBody);
+                    res.end();
+            }).catch(err => {
                 console.log("findByBbsId " + err);
-            } else {
-                console.log("findByBbsId.... SUCCESS ");
-            }
-            if(results.length == 0) {
-                res.json({ success: false, message: "No Data" });
+                res.json({
+                    success: false,
+                    message: err
+                });
                 res.end();
-            }else {
-                var totalPage = Math.ceil(results.length / req.query.perPage);
-                var pageInfo = {
-                    "totalPage": totalPage,
-                    "perPage": req.query.perPage,
-                    "curPage": req.query.curPage
-                };
-                var resBody = { "pageInfo": pageInfo, "stories": results, "count": results.length };
-                res.json(resBody);
-                res.end();
-            }
-        });
-    } else {
-        res.json({ success: false, message: "DB connection Error" });
-        res.end();
-    }
+            });
 
+        });
+    } catch(exception) {
+        console.log("findByBbsId " + err);
+    }
+    
 };
 
 //공지사항 신규등록

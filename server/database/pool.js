@@ -51,11 +51,10 @@ module.exports = class {
 
     
     getMapper() {
-        // 사용자 로그인 처리
-        ibatisMapper.createMapper(['./database/mysql/admin/userInfo.xml']);
-        //ibatisMapper.createMapper(['./database/mysql/user/board.xml']);
-        //ibatisMapper.createMapper(['./database/mysql/user/comp.xml']);
-        //ibatisMapper.createMapper(['./database/mysql/admin/userInfo.xml']);      
+        ibatisMapper.createMapper(['./database/mysql/admin/adminUserInfo.xml']);
+        ibatisMapper.createMapper(['./database/mysql/user/board.xml']);
+        ibatisMapper.createMapper(['./database/mysql/user/comp.xml']);
+        ibatisMapper.createMapper(['./database/mysql/user/userInfo.xml']);      
         return ibatisMapper;
     }
 };

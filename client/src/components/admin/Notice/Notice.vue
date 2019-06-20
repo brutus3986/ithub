@@ -108,17 +108,15 @@ export default {
                         "perPage": vm.perPage
                     }
                 }).then(function(response) {
-                    // console.log(response);
                     var tstories = response.data.stories;
                     var tcount   = response.data.count;
                     if(response.data.success == false){
                         alert("해당 게시글이 없습니다");
                     }else {
-                        tstories.forEach(function(story, index) {
-                            story.updated_at = story.updated_at.substring(0, 10);
-                        });
+                         tstories.forEach(function(story, index) {
+                              story.updated_at = story.updated_at.substring(0, 10);
+                         });
                     }
-
                     vm.storyList = tstories;
                     vm.totalPage = response.data.pageInfo.totalPage;
                     vm.count = tcount;
