@@ -10,9 +10,15 @@
 </select>
 <select id="getMaxStoryId" >
   <![CDATA[
-      select  max(story_id) story_id from boards
+      select  max(story_id) as story_id from boards
   ]]>	
 </select>
+<insert id="insertStory" >
+  <![CDATA[
+      insert into boards( bbs_id,contents,created_at,notice,story_id,title,updated_at,view,writer)
+                  values( #{bbs_id},#{contents},now(),#{notice},#{story_id},#{title},now(),#{view},#{writer})
+  ]]>	
+</insert>
 
     
 

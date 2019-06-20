@@ -34,7 +34,6 @@ var listStory = function(req, res) {
                 options.criteria = { $and: [ { contents : {$regex : sinfo, $options:"i" }}, ] };
             }
         }
-        console.log("options", JSON.stringify(options));
         var stmt = mapper.getStatement('board', 'getBbsInfo', options, {language:'sql', indent: '  '});
         console.log(stmt);
         Promise.using(pool.connect(), conn => {
@@ -68,52 +67,56 @@ var listStory = function(req, res) {
 var insertStory = function(req, res) {
     console.log('/board/insertstory 패스 요청됨.');
 
-    var mydb = req.app.get('mydb');
-
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
-        var options = { "criteria": { "bbs_id": bbs_id }, "storyinfo": storyInfo };
-        var stmt = mydb.Board.getMaxStoryId(options);
-        mydb.db.query(stmt, function(err, result) {
-             if (err) {
-                res.json({ success: false, message: err });
-                res.end();
-            }else if(result === null || result ){
-                if(result === null){
+        var options = {  "bbs_id": bbs_id , "storyinfo": storyInfo };
+        var stmt = mapper.getStatement('board', 'getMaxStoryId', options, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(result => {
+                 if(result[0] === null){
                     var maxStoryId = 1;
                 }else{
-                    var maxStoryId = result.story_id + 1;
+                    var maxStoryId = result[0][0].story_id + 1;
                 }
+                
                 options.storyinfo.story_id = maxStoryId;
                 storyInfo.story_id = maxStoryId;
-                //var tModel = new mydb.Board(options.storyinfo);
-                var stmt = mydb.Board.insertStory(options);
-                console.log("storyInfo" + JSON.stringify(storyInfo));
-                console.log(stmt);
-                mydb.db.query(stmt,[storyInfo.bbs_id,storyInfo.contents,storyInfo.display,storyInfo.notice,storyInfo.story_id ,storyInfo.title,storyInfo.view,storyInfo.writer], function(err, results) {
-                     if (err) {
-                        console.log("Insert.... FAIL");
-                        res.json({ success: false, message: "FAIL" });
-                        res.end();
-                    } else {
-                        console.log("Insert.... OK");
-                        res.json({ success: true, message: "OK" });
-                        res.end();
-                    }
-                });
-            }else {
-                res.json({ success: false, message: "No Data" });
+                //게시물입력
+                try {
+                    console.log(JSON.stringify(storyInfo));
+                    var stmt = mapper.getStatement('board', 'insertStory', storyInfo, {language:'sql', indent: '  '});
+                    console.log(stmt);
+                    Promise.using(pool.connect(), conn => {
+                        conn.queryAsync(stmt).then(rows => {
+                            console.log("Insert.... OK");
+                            res.json({ success: true, message: "OK" });
+                            res.end();
+                        }).catch(err => {
+                            console.log("Insert.... FAIL");
+                            res.json({ success: false, message: "FAIL" });
+                            res.end();
+                        });
+                    });
+                } catch(exception) {
+                    console.log("Insert2.... FAIL");
+                    res.json({ success: false, message: "FAIL" });
+                    res.end();
+                }//게시물입력
+            }).catch(err => {
+                res.json({ success: false, message: err });
                 res.end();
-            }
+            });
         });
-    } else {
+    } catch(exception) {
+        console.log("findByBbsId " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
-
 };
 
 //공지사항 게시글 수정
