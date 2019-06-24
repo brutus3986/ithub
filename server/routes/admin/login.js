@@ -37,7 +37,7 @@ var checkLogin = function(req, res) {
             var pool = req.app.get("pool");
             var mapper = req.app.get("mapper");
             var options = { userid : userid };
-            var stmt = mapper.getStatement('adminUserInfo', 'getUser', options, {language:'sql', indent: '  '});
+            var stmt = mapper.getStatement('userInfo', 'getUser', options, {language:'sql', indent: '  '});
             console.log(stmt);
             Promise.using(pool.connect(), conn => {
             conn.queryAsync(stmt).then(user => {
@@ -67,7 +67,7 @@ var checkLogin = function(req, res) {
                                         // 당일 / 누적 카운팅, 당일 초기화는 cron
                                         // options = { "criteria": {"userid": userid}, 
                                         //     "userinfo": {$inc: { total_visit: 1, today_visit : 1}, $set:{ last_visitday: visit_day}}};                            
-                                        var stmt = mapper.getStatement('adminUserInfo', 'updateInfo', options, {language:'sql', indent: '  '});
+                                        var stmt = mapper.getStatement('userInfo', 'updateInfo', options, {language:'sql', indent: '  '});
                                         console.log(stmt);
                                         Promise.using(pool.connect(), conn => {
                                             conn.queryAsync(stmt).then(rows => {

@@ -58,7 +58,7 @@ var listStory = function(req, res) {
 
         });
     } catch(exception) {
-        console.log("findByBbsId " + err);
+        console.log("listStory " + err);
     }
     
 };
@@ -73,6 +73,8 @@ var insertStory = function(req, res) {
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
+         (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '0' ; 
+
         var options = {  "bbs_id": bbs_id , "storyinfo": storyInfo };
         var stmt = mapper.getStatement('board', 'getMaxStoryId', options, {language:'sql', indent: '  '});
         console.log(stmt);
@@ -113,7 +115,7 @@ var insertStory = function(req, res) {
             });
         });
     } catch(exception) {
-        console.log("findByBbsId " + err);
+        console.log("insertStory " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
@@ -123,26 +125,29 @@ var insertStory = function(req, res) {
 var updateStory = function(req, res) {
     console.log('/board/updatestory 패스 요청됨.');
 
-    var mydb = req.app.get('mydb');
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
-        var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
-
-        mydb.Board.updateStory(options, function(err) {
-            if (err) {
-                console.log("Update.... FAIL " + err);
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
-                console.dir("Update.... OK ");
+        var options = {  "bbs_id": bbs_id , "storyinfo": storyInfo };
+        (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '0' ; 
+        var stmt = mapper.getStatement('board', 'updateStory', storyInfo, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(rows => {
+                console.log("Update.... OK");
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+            }).catch(err => {
+                console.log("Update.... FAIL");
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+    } catch(exception) {
+        console.log("updateViewCount Update.... FAIL");
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
@@ -153,60 +158,68 @@ var updateStory = function(req, res) {
 var updateViewCount = function(req, res) {
     console.log('updateViewCount 요청됨.');
 
-    var mydb = req.app.get('mydb');
-
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
-
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
+        
         var bbs_id = req.body.bbs_id;
         var story_id = req.body.story_id;
-        var options = { "criteria": { "bbs_id": bbs_id, "story_id": story_id }};
-
-        mydb.Board.updateViewCount(options, function(err) {
-            if (err) {
-                console.log("updateViewCount Update.... FAIL " + err);
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
-                console.dir("updateViewCount Update.... OK ");
+        var options = { "bbs_id": bbs_id, "story_id": story_id };
+        console.log("option   :::" +  JSON.stringify(options));
+        var stmt = mapper.getStatement('board', 'updateViewCount',options , {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(rows => {
+                console.log("updateViewCount Update.... OK");
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+            }).catch(err => {
+                console.log("updateViewCount Update.... FAIL");
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+     } catch(exception) {
+        console.log("updateViewCount Update.... FAIL");
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
+
 
 };
 
 //공지사항 게시글 삭제
 var deleteStory = function(req, res) {
     console.log('/board/deletestory 패스 요청됨.');
+    try {
 
-    var mydb = req.app.get('mydb');
-
-    if (mydb.db) {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
-        var options = { "criteria": { "bbs_id": bbs_id, "story_id": storyInfo.story_id }, "storyinfo": storyInfo };
-
-        mydb.Board.deleteStory(options, function(err) {
-            if (err) {
-                console.log("Delete.... FAIL " + err);
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
-                console.dir("Delete.... OK ");
+        
+        var options = { "bbs_id": bbs_id, "story_id": storyInfo.story_id };
+        console.log("option   :::" +  JSON.stringify(options));
+        var stmt = mapper.getStatement('board', 'deleteStory',options , {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(rows => {
+                console.log("deleteStory Update.... OK");
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+            }).catch(err => {
+                console.log("deleteStory Update.... FAIL");
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+     } catch(exception) {
+        console.log("deleteStory " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
+
 };
 
 module.exports.listStory = listStory;

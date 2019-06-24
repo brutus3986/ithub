@@ -11,15 +11,65 @@
 <select id="getMaxStoryId" >
   <![CDATA[
       select  max(story_id) as story_id from boards
+      where bbs_id =  #{bbs_id}
   ]]>	
 </select>
 <insert id="insertStory" >
   <![CDATA[
-      insert into boards( bbs_id,contents,created_at,notice,story_id,title,updated_at,view,writer)
-                  values( #{bbs_id},#{contents},now(),#{notice},#{story_id},#{title},now(),#{view},#{writer})
+      insert  
+        into boards
+          ( 
+              bbs_id
+              ,contents
+              ,created_at
+              ,display
+              ,notice
+              ,story_id
+              ,title
+              ,updated_at
+              ,view
+              ,writer
+          )
+      values
+          ( 
+              #{bbs_id}
+              ,#{contents}
+              ,now()
+              ,'1'
+              ,#{notice}
+              ,#{story_id}
+              ,#{title}
+              ,now()
+              ,#{view}
+              ,#{writer}
+          )
   ]]>	
 </insert>
-
-    
+<update id="updateStory" >
+  <![CDATA[
+      update boards
+         set   contents       =     #{contents} 
+              ,notice         =     #{notice}
+              ,title          =     #{title}
+              ,updated_at     =       now()
+      where   bbs_id        =     #{bbs_id}
+      and     story_id        =     #{story_id}
+  ]]>
+</update>	
+<update id="updateViewCount" >
+  <![CDATA[
+      update boards
+         set      view       =     view    + 1 
+       where   bbs_id        =     #{bbs_id}
+       and     story_id        =     #{story_id}
+  ]]>	
+</update>
+<delete id="deleteStory" >
+  <![CDATA[
+      delete from boards
+       where   bbs_id        =     #{bbs_id}
+         and   story_id      =     #{story_id}
+  ]]>	
+</delete>    
 
 </mapper>
