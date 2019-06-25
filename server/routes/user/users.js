@@ -27,8 +27,7 @@ var getUserInfo = function(req, res) {
         console.log(stmt);
         Promise.using(pool.connect(), conn => {
             conn.queryAsync(stmt).then(user => {
-                console.log("user:::::" +  JSON.stringify(user[0]));
-                if (user[0]== null || user[0] == '') {
+                 if (user[0]== null || user[0] == '') {
                     res.json({ success: false, message: "No Data" });
                     res.end();
                 } else {

@@ -37,7 +37,8 @@ export default {
                 if(response.data.success == false){
                     // alert("해당 게시글이 없습니다");
                 }else {
-                    vm.sInfo = response.data.specinfo ;
+                    vm.sInfo = response.data.specinfo[0] ;
+                    //console.log("spec::" + JSON.stringify(vm.sInfo[0]));
                 }
             });
 

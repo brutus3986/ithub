@@ -89,5 +89,14 @@
          and   story_id      =     #{story_id}
   ]]>	
 </delete>    
+<select id="getUserSpecInfo" >
+  <![CDATA[
+      select * from boards
+      where bbs_id =  '2' 
+      and comp_no  = #{comp_no}
+      and notice = '1'
+      order by updated_at desc limit 1 
+  ]]>	
+</select>
 
 </mapper>
