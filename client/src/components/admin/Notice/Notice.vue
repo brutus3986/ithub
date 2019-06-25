@@ -110,7 +110,7 @@ export default {
                 }).then(function(response) {
                     var tstories = response.data.stories;
                     var tcount   = response.data.count;
-                    console.log("tstories" + JSON.stringify(tstories ) );
+                    //console.log("tstories" + JSON.stringify(tstories ) );
                     if(response.data.success == false){
                         alert("해당 게시글이 없습니다");
                     }else {

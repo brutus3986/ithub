@@ -18,22 +18,18 @@ var listStory = function(req, res) {
     try {
         var pool = req.app.get("pool");
         var mapper = req.app.get("mapper");
-    
+        var startPage = req.query.perPage  * (req.query.curPage -1) ;
+
         var options = {
             "bbs_id": req.query.bbs_id ,
             "perPage": req.query.perPage,
-            "curPage": req.query.curPage
+            "curPage": req.query.curPage,
+            "seloption": req.query.seloption,
+            "searchinfo": req.query.searchinfo,
+            "startPage": req.query.perPage  * (req.query.curPage -1),
+            "limitPage" : req.query.perPage
         };
-        if(req.query.searchinfo != '') {
-            var sinfo = '.*' + req.query.searchinfo + '*.';
-            if(req.query.seloption == 'title') {
-                options.criteria = { $and: [ { title : {$regex : sinfo, $options:"i" }}, ] };
-            }else if(req.query.seloption == 'writer') {
-                options.criteria = { $and: [ { writer : {$regex : sinfo, $options:"i" }}, ] };
-            }else {
-                options.criteria = { $and: [ { contents : {$regex : sinfo, $options:"i" }}, ] };
-            }
-        }
+        console.log("option:" +  JSON.stringify(options));
         var stmt = mapper.getStatement('board', 'getBbsInfo', options, {language:'sql', indent: '  '});
         console.log(stmt);
         Promise.using(pool.connect(), conn => {
@@ -73,8 +69,9 @@ var insertStory = function(req, res) {
 
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
-         (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '0' ; 
-
+        (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '' ; 
+        (storyInfo.comp_name == null || storyInfo.comp_name == undefined)?storyInfo.comp_name='': storyInfo.comp_name= storyInfo.comp_name;
+        (storyInfo.comp_no == null || storyInfo.comp_no== undefined)?storyInfo.comp_no='': storyInfo.comp_no= storyInfo.comp_no;
         var options = {  "bbs_id": bbs_id , "storyinfo": storyInfo };
         var stmt = mapper.getStatement('board', 'getMaxStoryId', options, {language:'sql', indent: '  '});
         console.log(stmt);
@@ -132,7 +129,10 @@ var updateStory = function(req, res) {
         var bbs_id = req.body.bbs_id;
         var storyInfo = req.body.storyinfo;
         var options = {  "bbs_id": bbs_id , "storyinfo": storyInfo };
-        (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '0' ; 
+        (storyInfo.notice == true)?storyInfo.notice = '1':storyInfo.notice = '' ; 
+        (storyInfo.comp_name == null || storyInfo.comp_name == undefined)?storyInfo.comp_name='': storyInfo.comp_name= storyInfo.comp_name;
+        (storyInfo.comp_no == null || storyInfo.comp_no== undefined)?storyInfo.comp_no='': storyInfo.comp_no= storyInfo.comp_no;
+        console.log("storyInfo" + JSON.stringify(storyInfo));
         var stmt = mapper.getStatement('board', 'updateStory', storyInfo, {language:'sql', indent: '  '});
         console.log(stmt);
         Promise.using(pool.connect(), conn => {

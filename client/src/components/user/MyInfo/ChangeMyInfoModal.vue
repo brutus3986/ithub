@@ -134,9 +134,9 @@ export default {
                 if(response.data.success==false){
                     alert('해당되는 계정이 없습니다.');
                 }else{
-                    vm.userinfo = response.data.userinfo;
+                    vm.userinfo = response.data.userinfo[0];
                     vm.conntime = vm.userinfo.starttime + "시 ~ "+ vm.userinfo.endtime + "시";
-                    console.log(vm.userinfo)
+                    //console.log("CONSOLE" + JSON.stringify(vm.userinfo));
                 }
             })
         },

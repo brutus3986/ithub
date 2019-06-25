@@ -53,7 +53,7 @@
         </if>
     </if>
     </where>
-    order by updated_at limit ${startPage} ,  ${limitPage}  
+    order by updated_at desc  limit  ${startPage} ,  ${limitPage}  
 </select>
 
 <select id="getUserId" >
@@ -67,16 +67,81 @@
     <![CDATA[
         select * from   users  where userid = #{userid}  and hashed_password = #{hashed_password} 
     ]]>	
-  
 </select>
 
 <update id="pwdUpdate" >
     <![CDATA[
-        update users set hashed_password = #{hashed_password}  where userid = #{userid}
+        update users set hashed_password = #{hashed_password},updated_at = now()  where userid = #{userid}
     ]]>	
-  
-</update>
+ </update>
 
+<insert id="insertUser" >
+  <![CDATA[
+      insert  
+        into users
+          (              
+              userid
+              ,comp_name
+              ,comp_no
+              ,created_at
+              ,email
+              ,endtime
+              ,hashed_password
+              ,ipaddr
+              ,last_visitday
+              ,name 
+              ,password
+              ,phonenumber
+              ,starttime
+              ,user_level 
+              ,updated_at
+              ,today_visit
+              ,total_visit
+ 
+          )
+      values
+          ( 
+              #{userid}
+              ,#{comp_name}
+              ,#{comp_no}
+              ,now()
+              ,#{email}
+              ,#{endtime}
+              ,#{hashed_password}
+              ,#{ipaddr}
+              ,now()
+              ,#{name}
+              ,#{password}
+              ,#{phonenumber}
+              ,#{starttime}
+              ,#{user_level}
+              ,now()
+              ,0
+              ,0
+          )
+  ]]>	
+</insert>
+<update id="updateUser" >
+  <![CDATA[
+      update users
+         set   comp_name        =     #{comp_name} 
+              ,comp_no          =     #{comp_no}
+              ,updated_at       =     now()
+              ,email            =     #{email}
+              ,endtime          =     #{endtime}
+              ,ipaddr           =     #{ipaddr}
+              ,name             =     #{name}
+              ,phonenumber      =     #{phonenumber}
+              ,starttime        =     #{starttime}
+              ,user_level       =     #{user_level}
+      where   userid            =     #{userid}
 
-
+  ]]>
+</update>	
+<delete id="daleteUser" >
+  <![CDATA[
+      delete from  users
+      where   userid            =     #{userid}
+  ]]>
+</delete>	
 </mapper>

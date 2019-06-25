@@ -90,7 +90,6 @@ export default {
             fetchStories: function() {
                 console.log('fetchStories');
                 var vm = this;
-                                
                 axios.get(Config.base_url+'/board/liststory', {
                     params: {
                         "bbs_id" : vm.bbs_id,

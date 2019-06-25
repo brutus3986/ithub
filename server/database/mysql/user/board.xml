@@ -7,6 +7,18 @@
       select  * from boards 
       where bbs_id =  #{bbs_id}
   ]]>	
+    <if test="searchinfo != null and searchinfo != '' " >
+        <if test="seloption =='title'">
+            <![CDATA[ and title like concat('%' , trim(#{searchinfo}), '%' )  ]]>	   
+        </if>
+        <if test="seloption =='writer'">
+            <![CDATA[ and writer like concat('%' , trim(#{searchinfo}), '%' )  ]]>	   
+        </if>
+        <if test="seloption =='contents'">
+            <![CDATA[ and contents like concat('%' , trim(#{searchinfo}), '%' )  ]]>	   
+        </if>
+    </if>
+    order by story_id asc  limit  ${startPage} ,  ${limitPage}  
 </select>
 <select id="getMaxStoryId" >
   <![CDATA[
@@ -19,7 +31,9 @@
       insert  
         into boards
           ( 
-              bbs_id
+              comp_name
+              ,comp_no
+              ,bbs_id
               ,contents
               ,created_at
               ,display
@@ -27,12 +41,14 @@
               ,story_id
               ,title
               ,updated_at
-              ,view
               ,writer
+              ,view
           )
       values
           ( 
-              #{bbs_id}
+              #{comp_name}
+              ,#{comp_no}
+              ,#{bbs_id}
               ,#{contents}
               ,now()
               ,'1'
@@ -40,19 +56,21 @@
               ,#{story_id}
               ,#{title}
               ,now()
-              ,#{view}
               ,#{writer}
+              ,0
           )
   ]]>	
 </insert>
 <update id="updateStory" >
   <![CDATA[
       update boards
-         set   contents       =     #{contents} 
+         set  comp_name       =     #{comp_name}
+              ,comp_no        =     #{comp_no}
+              ,contents       =     #{contents} 
               ,notice         =     #{notice}
               ,title          =     #{title}
-              ,updated_at     =       now()
-      where   bbs_id        =     #{bbs_id}
+              ,updated_at     =     now()
+      where   bbs_id          =     #{bbs_id}
       and     story_id        =     #{story_id}
   ]]>
 </update>	

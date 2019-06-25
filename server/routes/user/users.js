@@ -6,36 +6,43 @@
  */
 var crypto = require('crypto');
 var config = require('../../config/config');
+var Promise = require("bluebird");
+var async = require('async');
 
 // 사용사 정보 조회
 var getUserInfo = function(req, res) {
     console.log('/users/getUserInfo 패스 요청됨.');
     console.log(req.body);
-    
-    var mydb = req.app.get('mydb');
-
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
-
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
         var userid = req.body.userid || req.query.userid;
         console.log("getUserInfo : " + req.body.userid);
         console.log("getUserInfo : " + req.query.userid);
+        var options = {
+            "userid": userid,
+        };
         
-        mydb.UserModel.findByUserId(userid, function(err, user) {
-            console.log("getUserInfo : " + user);
-            if (err) {
+        var stmt = mapper.getStatement('userInfo', 'getUserId', options, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(user => {
+                console.log("user:::::" +  JSON.stringify(user[0]));
+                if (user[0]== null || user[0] == '') {
+                    res.json({ success: false, message: "No Data" });
+                    res.end();
+                } else {
+                    res.json({ success: true, message: "OK", userinfo: user[0]});
+                    res.end();
+                }                
+             }).catch(err => {
                 console.dir(err);
                 res.json({ success: false, message: err });
                 res.end();
-            } else if (user.length) {
-                res.json({ success: true, message: "OK", userinfo: user[0]});
-                res.end();
-            } else {
-                res.json({ success: false, message: "No Data" });
-                res.end();
-            }
+            });
         });
-    } else {
+    } catch(exception) {
+        console.log("getUserInfo " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
@@ -44,26 +51,28 @@ var getUserInfo = function(req, res) {
 //사용자정보 수정
 var updateUserInfo = function(req, res) {
     console.log('/users/updateUserInfo 패스 요청됨');
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
-    var mydb = req.app.get('mydb');
-
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
         var userinfo = req.body.userinfo;
-        var options = { "criteria": {"userid": userinfo.userid}, "userinfo": userinfo };
-
-        mydb.UserModel.updateInfo(options, function(err) {
-            if (err) {
+        var options = { "userid": userinfo.userid, "userinfo": userinfo };
+        var stmt = mapper.getStatement('userInfo', 'updateInfo', options, {language:'sql', indent: '  '});
+    
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(user => {
+                console.dir("Update.... OK ");
+                res.json({ success: true, message: "OK" });
+                res.end();               
+             }).catch(err => {
                 console.log("Update.... FAIL " + err);
                 res.json({ success: false, message: "FAIL" });
                 res.end();
-            } else {
-                console.dir("Update.... OK ");
-                res.json({ success: true, message: "OK" });
-                res.end();
-            }
+            });
         });
-    } else {
+    } catch(exception) {
+        console.log("updateUserInfo " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }

@@ -28,7 +28,6 @@ var userList = function(req, res) {
             conn.queryAsync(stmt).then(rows => {
                 var startPage = req.query.perPage  * (req.query.curPage -1) ;
                 var userCnt = rows[0][0]['userCnt'] ;
-                console.log("userCnt" + userCnt);
                 if(userCnt > 0) {
                     var options = {
                         "perPage": req.query.perPage,
@@ -88,14 +87,13 @@ var useridCheck = function(req, res) {
     try {
         var pool = req.app.get("pool");
         var mapper = req.app.get("mapper");
-         var options = {
+        var options = {
             "userid": req.body.userid,
         };
         var stmt = mapper.getStatement('userInfo', 'getUserId', options, {language:'sql', indent: '  '});
         console.log(stmt);
         Promise.using(pool.connect(), conn => {
             conn.queryAsync(stmt).then(user => {
-                console.log("user:::::" +  (user[0]));
                 if (user[0]== null || user[0] == '') {
                     console.log("사용가능한 ID..1");
                     res.json({ success: false, message: "No ID" });
@@ -124,18 +122,14 @@ var pwdInit = function(req, res) {
     try {
         var pool = req.app.get("pool");
         var mapper = req.app.get("mapper");
-         var options = {
-            "userid": req.body.userid,
-        };
         var hashed_password = crypto.createHash('sha256', config.pwd_salt).update(config.pwd_default).digest('base64');
         console.log("hash : " + hashed_password);
-        var options = {"userid": userid , "hashed_password": hashed_password };
-
-        var stmt = mapper.getStatement('userInfo', 'getUserId', options, {language:'sql', indent: '  '});
+        var options = {"userid": req.body.userid , "hashed_password": hashed_password };
+         var stmt = mapper.getStatement('userInfo', 'pwdUpdate', options, {language:'sql', indent: '  '});
         console.log(stmt);
         Promise.using(pool.connect(), conn => {
             conn.queryAsync(stmt).then(result => {
-                console.dir("pwdInit.... OK : " + result);
+                console.dir("pwdInit.... OK : " + JSON.stringify(result) );
                 res.json({ success: true, message: "OK" });
                 res.end();
              }).catch(err => {
@@ -163,7 +157,6 @@ var pwdChange = function(req, res) {
         var userid = req.body.userid;
         var oldPwd = req.body.oldPwd;
         var newPwd = req.body.newPwd;
-
         var options = {};
         var old_hashed_password = crypto.createHash('sha256', config.pwd_salt).update(oldPwd).digest('base64');
         options.userid = userid;
@@ -179,8 +172,8 @@ var pwdChange = function(req, res) {
                     res.end();
                 }else{
                     var new_hashed_password = crypto.createHash('sha256', config.pwd_salt).update(newPwd).digest('base64');
-                    console.log("hash : " + new_hashed_password);
                     var options1 = {"userid": userid , "hashed_password": new_hashed_password} ;
+                    console.log("hash : " + JSON.stringify(options1));
                     var stmt = mapper.getStatement('userInfo', 'pwdUpdate', options1, {language:'sql', indent: '  '});
                     console.log(stmt);
                     Promise.using(pool.connect(), conn => {
@@ -209,39 +202,34 @@ var pwdChange = function(req, res) {
         res.end();
     }
 };
-여기까지
-====================================================>
-//신규사용자 등록
-
 
 var insertInfo = function(req, res) {
     console.log('/users/insertinfo 패스 요청됨 ');
 
-    var mydb = req.app.get('mydb');
-    var hashed_password = crypto.createHash('sha256', config.pwd_salt).update(config.pwd_default).digest('base64');
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
-
+        var hashed_password = crypto.createHash('sha256', config.pwd_salt).update(config.pwd_default).digest('base64');
         var userinfo = req.body.userinfo;
         userinfo.hashed_password = hashed_password;
-
-        var options = { "criteria": {}, "userinfo": userinfo };
-
-        var UM = new mydb.UserModel(options.userinfo);
-        UM.insertInfo(function(err, result) {
-            if (err) {
-                console.log("Insert.... FAIL");
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
+        var options = {"userinfo": userinfo };
+        var stmt = mapper.getStatement('userInfo', 'insertUser', options.userinfo, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(result => {
                 console.log("Insert.... OK");
                 console.log(result);
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+             }).catch(err => {
+                console.log("Insert.... FAIL");
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+   } catch(exception) {
+        console.log("Insert " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
@@ -253,53 +241,58 @@ var insertInfo = function(req, res) {
 var updateInfo = function(req, res) {
     console.log('/users/updateinfo 패스 요청됨');
 
-    var mydb = req.app.get('mydb');
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
 
-    // 데이터베이스 객체가 초기화된 경우
-    if (mydb.db) {
         var userinfo = req.body.userinfo;
-        var options = { "criteria": {"userid": userinfo.userid}, "userinfo": userinfo };
-
-        mydb.UserModel.updateInfo(options, function(err) {
-            if (err) {
-                console.log("Update.... FAIL " + err);
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
+        var options = {"userinfo": userinfo };
+        var stmt = mapper.getStatement('userInfo', 'updateUser', options.userinfo, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(result => {
                 console.log("Update.... OK ");
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+             }).catch(err => {
+                console.log("Update.... FAIL " + err);
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+   } catch(exception) {
+        console.log("Insert " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
-
 };
+
 
 //사용자 삭제
 var deleteInfo = function(req, res) {
     console.log('/users/deleteinfo 패스 요청됨.');
-
-    var mydb = req.app.get('mydb');
-    if (mydb.db) {
+    try {
+        var pool = req.app.get("pool");
+        var mapper = req.app.get("mapper");
         var bbs_id = req.body.bbs_id;
         var userinfo = req.body.userinfo;
-        var options = { "criteria": {"userid": userinfo.userid }, "userinfo": userinfo };
+        var options = { "userid": userinfo.userid , "userinfo": userinfo };
 
-        mydb.UserModel.deleteInfo(options, function(err) {
-            if (err) {
-                console.log("Delete.... FAIL " + err);
-                res.json({ success: false, message: "FAIL" });
-                res.end();
-            } else {
+        var stmt = mapper.getStatement('userInfo', 'daleteUser', options.userinfo, {language:'sql', indent: '  '});
+        console.log(stmt);
+        Promise.using(pool.connect(), conn => {
+            conn.queryAsync(stmt).then(result => {
                 console.dir("Delete.... OK ");
                 res.json({ success: true, message: "OK" });
                 res.end();
-            }
+             }).catch(err => {
+                console.log("Delete.... FAIL " + err);
+                res.json({ success: false, message: "FAIL" });
+                res.end();
+            });
         });
-    } else {
+    } catch(exception) {
+        console.log("Insert " + err);
         res.json({ success: false, message: "DB connection Error" });
         res.end();
     }
