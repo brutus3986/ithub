@@ -55,7 +55,7 @@ export default {
             userslist :[],
             userinfo  :{},
             searchinfo:'',
-            seloption: 'name',
+            seloption: '',
             options:[
                 {text:"고객명",   value:"name"},
                 {text:"회원사명",   value:"comp_name"},
@@ -94,10 +94,10 @@ export default {
             
             axios.get(Config.base_url+'/admin/userlist',{
                 params: {
-                    "seloption" : vm.seloption,
-                    "searchinfo" : vm.searchinfo,
-                    "curPage": vm.curPage,
-                    "perPage": vm.perPage
+                     "seloption" : this.seloption,
+                    "searchinfo" : this.searchinfo,
+                    "curPage": this.curPage,
+                    "perPage": this.perPage
                 }
             }).then(function(response){
                 if(response.data.success == false){

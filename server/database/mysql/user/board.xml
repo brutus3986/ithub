@@ -18,7 +18,7 @@
             <![CDATA[ and contents like concat('%' , trim(#{searchinfo}), '%' )  ]]>	   
         </if>
     </if>
-    order by story_id asc  limit  ${startPage} ,  ${limitPage}  
+    order by story_id desc  limit  ${startPage} ,  ${limitPage}  
 </select>
 <select id="getMaxStoryId" >
   <![CDATA[
